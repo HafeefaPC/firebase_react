@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import {Auth} from "./components/auth";
 import { db} from "./config/firebase";
-import { getDocs, collection,addDoc} from "firebase/firestore";
+import { getDocs, collection,addDoc,deleteDoc,doc} from "firebase/firestore";
 
 
 
@@ -16,26 +16,10 @@ function App() {
      const[newAge, setAge] = useState("");
 
      const dataCollectionRef = collection(db, 'personal data')
-     const getDatalist = async () => {
-      try{
-      const data = await  getDocs(dataCollectionRef);
-      
-      const filteredData = data.docs.map((doc) => ({
-       ...doc.data(),
-       id: doc.id,  
-     }));
-   
-     setDatalist(filteredData);
      
-       } catch (err) {
-         console.error(err);
-       }
-       };
+
     
- useEffect(() =>  {  
-    
-    getDatalist();
-    }, []);
+ 
 
     const onSubmitPersonaldata = async () => {
       try{
@@ -45,11 +29,38 @@ function App() {
        Age:newAge,
     } )
 
-    getDatalist();
+  
   } catch(err){
     console.error(err); 
   }
     }
+
+    const deletepersonaldata = async (id) =>{
+      const personaldataDoc = doc(db,"personal data",id)
+      await deleteDoc(personaldataDoc);
+
+    }
+
+    useEffect(() =>  {  
+      const getDatalist = async () => {
+        try{
+        const data = await  getDocs(dataCollectionRef);
+        
+        const filteredData = data.docs.map((doc) => ({
+         ...doc.data(),
+         id: doc.id,  
+       }));
+     
+       setDatalist(filteredData);
+       
+         } catch (err) {
+           console.error(err);
+         }
+         };
+        
+      getDatalist();
+    }, []);
+
   return ( 
   <div className="App">
     <Auth />
@@ -68,6 +79,7 @@ function App() {
     <div key={personaldata.id}>
       <h1>{personaldata.name}</h1>
      <p>phoneno:{personaldata.phonenumber}</p>
+     <button onClick={() =>deletepersonaldata(personaldata.id)}>Delete Personal Data</button>
   </div>
   ))}
   </div>
