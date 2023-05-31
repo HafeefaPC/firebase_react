@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 import {Auth} from "./components/auth";
-import { db} from "./config/firebase";
-import { getDocs, collection,addDoc,deleteDoc,doc} from "firebase/firestore";
-
+import { db,auth,storage} from "./config/firebase";
+import { getDocs, collection,addDoc,deleteDoc,updateDoc,doc} from "firebase/firestore";
+import{ ref, uploadBytes} from "firebase/storage";
 
 
 function App() {
@@ -15,10 +15,12 @@ function App() {
      const[newAddress, setAddress] = useState("");
      const[newAge, setAge] = useState("");
 
-     const dataCollectionRef = collection(db, 'personal data')
-     
+     const [updatedpersonaldata,setUpdatedpersonaldata] = useState("")
 
-    
+    const [fileUpload,setFileUpload] = useState(null)
+
+
+     const dataCollectionRef = collection(db, 'personal data') 
  
 
     const onSubmitPersonaldata = async () => {
@@ -27,6 +29,7 @@ function App() {
        phonenumber: newPhonenumber,
        Address:newAddress,
        Age:newAge,
+       userId: auth?.currentUser.uid,
     } )
 
   
@@ -40,6 +43,23 @@ function App() {
       await deleteDoc(personaldataDoc);
 
     }
+    const Updatepersonaldata = async (id) =>{
+      const personaldataDoc = doc(db,"personal data",id)
+      await updateDoc(personaldataDoc,{personaldata: updatedpersonaldata});
+
+    }
+
+     const uploadFile = async () => {
+  if (!fileUpload) return;
+  const filesFolderRef = ref(storage, `projectFiles/${fileUpload.name}`);
+  try {
+    await uploadBytes(filesFolderRef, fileUpload);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+
 
     useEffect(() =>  {  
       const getDatalist = async () => {
@@ -80,8 +100,15 @@ function App() {
       <h1>{personaldata.name}</h1>
      <p>phoneno:{personaldata.phonenumber}</p>
      <button onClick={() =>deletepersonaldata(personaldata.id)}>Delete Personal Data</button>
+
+     <input placeholder ="new title..." onChange={(e => setUpdatedpersonaldata(e.target.value))} />
+     <button onClick={() => updatedpersonaldata(personaldata.id)}>Update Personal data</button>
   </div>
   ))}
+  </div>
+  <div>
+    <input type='file' onChange={(e) => setFileUpload(e.target.files[0])}/>
+    <button onClick={uploadFile} >Upload File</button>
   </div>
   </div>
   );
